@@ -12,18 +12,19 @@
  * by Jan-Willem Smaal <usenet@gispen.org> 
  */  
 #include "i2c-lcd.h"
-
+I2C i2c(I2C_SDA, I2C_SCL);
+#define DEBUG 1 
 
 /**
  * Moves the cursor 40 positions to the right
  * so it ends up on line2.
  */
-void i2c_lcd_move_cursor_line2(void){
+void I2cLcd::move_cursor_line2(void){
 	uint8_t j; 
 
-	i2c_lcd_write(RETURN_HOME);
+	I2cLcd::write(RETURN_HOME);
 	for(j=0;j<40;j++) {
-		i2c_lcd_write(0b00010100);
+		I2cLcd::write(0b00010100);
 	}
 
 	return;
@@ -33,8 +34,8 @@ void i2c_lcd_move_cursor_line2(void){
 /**
  * Puts the cursor back at line2 
  */ 
-void i2c_lcd_move_cursor_line1(void){
-	i2c_lcd_write(RETURN_HOME);
+void I2cLcd::move_cursor_line1(void){
+	I2cLcd::write(RETURN_HOME);
 
 	return;
 } 
@@ -47,9 +48,10 @@ void i2c_lcd_move_cursor_line1(void){
  */ 
 void i2c_ioexpander_write(uint8_t value) 
 {
-	i2c_start(PCF8574T_WRITE);
-	i2c_write(value);
-	i2c_stop();
+	i2c.start(); 
+	i2c.write(PCF8574T_WRITE);
+	i2c.write(value);
+	i2c.stop();
 
 	return;
 }
@@ -59,10 +61,10 @@ void i2c_ioexpander_write(uint8_t value)
  * Takes care of sending the 8 bit byte 
  * with the enable pin pulsed (required for 4 bit mode)     
  */
-void i2c_lcd_write4bits(uint8_t val) 
+void I2cLcd::write4bits(uint8_t val) 
 {
-    i2c_ioexpander_write(val);	
-	i2c_lcd_pulse_enable(val);
+    i2c_ioexpander_write(val);
+	pulse_enable(val);
 
 	return;
 }
@@ -72,13 +74,13 @@ void i2c_lcd_write4bits(uint8_t val)
  * in 4 bits mode we need to pulse the bytes in.  
  * one nibble at a time. 
  */
-void i2c_lcd_write(uint8_t val) 
+void I2cLcd::write(uint8_t val) 
 {
 	uint8_t lnibble, hnibble; 
 	hnibble = val & 0xF0;	// High nibble 4 bits
 	lnibble = val & 0x0F; // Low  nibble 4 bits 
-	i2c_lcd_write4bits(hnibble);	
-	i2c_lcd_write4bits(lnibble<<4);	
+	I2cLcd::write4bits(hnibble);	
+	I2cLcd::write4bits(lnibble<<4);	
 	
 	return;
 }
@@ -88,16 +90,16 @@ void i2c_lcd_write(uint8_t val)
 /**
  * Output a character in 4 bit mode. 
  */ 
-void i2c_lcd_putchar(char c) 
+void I2cLcd::putchar(char c) 
 {
-	//i2c_lcd_write((uint8_t) c);
+	//I2cLcd::write((uint8_t) c);
 
 
 	uint8_t lnibble, hnibble; 
 	hnibble = c & 0xF0;	// High nibble 4 bits
 	lnibble = c & 0x0F; // Low  nibble 4 bits 
-	i2c_lcd_write4bits(RS | BT | hnibble);	
-	i2c_lcd_write4bits(RS | BT | lnibble<<4);	
+	I2cLcd::write4bits(RS | BT | hnibble);	
+	I2cLcd::write4bits(RS | BT | lnibble<<4);	
 
 	return;
 }
@@ -106,118 +108,118 @@ void i2c_lcd_putchar(char c)
 /**
  * Toggle enable pin
  */
-void i2c_lcd_pulse_enable(uint8_t val)
+void I2cLcd::pulse_enable(uint8_t val)
 {
     i2c_ioexpander_write((val|BT) | EN);		// Enable  high
-    _delay_ms(1);						// >450ns
+    ThisThread::sleep_for(1ms);						// >450ns
 
 	i2c_ioexpander_write((val|BT) & ~EN);	// Enable low
-    _delay_ms(1);						// > 37us e
+    ThisThread::sleep_for(1ms);						// > 37us e
 
 	return; 
 }
 
 
-/**
+/** Constructor 
  * We init the LCD in 4 bit mode. 
  *
  * Just following the Hitachi datasheet. 
+ * exactly as written no shortcuts.  
  */ 
-void i2c_lcd_init()
+ I2cLcd::I2cLcd()
 {
 	uint8_t i, j, lnibble, hnibble; 
 
 	// We really need to wait a long time 
 	// to ensure the LCD is ready after powerup. 
-	_delay_ms(600);
+	ThisThread::sleep_for(600ms);
 	i2c_ioexpander_write(~BT);
 	
 #if 0  
 	// !! 
-	i2c_lcd_write4bits(DB6| DB5);
-	_delay_ms(5); 
+	I2cLcd::write4bits(DB6| DB5);
+	ThisThread::sleep_for(5); 
 	// !! 
-	i2c_lcd_write4bits(DB6| DB5);
-	_delay_ms(5); 
+	I2cLcd::write4bits(DB6| DB5);
+	ThisThread::sleep_for(5); 
 	// !! 
-	i2c_lcd_write4bits(DB6| DB5);
-	_delay_ms(5); 
+	I2cLcd::write4bits(DB6| DB5);
+	ThisThread::sleep_for(5); 
 #endif 
 
 
 	// page42 Step 2 -> 4 bit mode. 
-	i2c_lcd_write4bits(DB5);
-	_delay_ms(5); 
+	I2cLcd::write4bits(DB5);
+	ThisThread::sleep_for(5ms); 
 
 	// page42 Step 3a
-	i2c_lcd_write4bits(DB5);	// One line. 
-	_delay_ms(5); 
+	I2cLcd::write4bits(DB5);	// One line. 
+	ThisThread::sleep_for(5ms); 
 
 
 	// page42 Step 3b: set 4 bit operation and select 1 line displays
 	// DB5 == function set 
-	i2c_lcd_write4bits(DB5);
-	_delay_ms(150);
+	I2cLcd::write4bits(DB5);
+	ThisThread::sleep_for(150ms);
 
 
 	/* 
 	 * !! From this point on 4 bit operation is used !! 
 	 */ 
-	//i2c_lcd_write(0b00101100);
-	i2c_lcd_write(DB5 | DB3 | DB2);
-	_delay_ms(150); 
+	//I2cLcd::write(0b00101100);
+	I2cLcd::write(DB5 | DB3 | DB2);
+	ThisThread::sleep_for(150ms); 
 
 
 
 	// page42 Step 4: Turn on display and cursor so 0000 1111 
 	// which means DB0,1,2,3 actually.  
-	i2c_lcd_write4bits(0x00);
-	//i2c_lcd_write4bits(DB7 | DB6 | DB5);
-	i2c_lcd_write4bits(DB7 | DB6 | DB5 | DB4); // Blinking
-	_delay_ms(5); 
+	I2cLcd::write4bits(0x00);
+	//I2cLcd::write4bits(DB7 | DB6 | DB5);
+	I2cLcd::write4bits(DB7 | DB6 | DB5 | DB4); // Blinking
+	ThisThread::sleep_for(5ms); 
 
 	
 	// Page42 step 5: set mode to increment address by one 
 	// and to shift the cursor to the right. 
 	// Display is not shifted. 
 	// 0000 0110 
-	i2c_lcd_write4bits(0x00);
-	i2c_lcd_write4bits(DB6 | DB5);
+	I2cLcd::write4bits(0x00);
+	I2cLcd::write4bits(DB6 | DB5);
 
-	_delay_ms(5); 
+	ThisThread::sleep_for(5ms); 
 
 #if 0 
 	// Page42 step 6: Write a H (we don't implement) 
-	i2c_lcd_write4bits(RS | DB6);	// Writes H. 
-	i2c_lcd_write4bits(RS | DB7);	// shifts to the right
-	_delay_ms(4); 
+	I2cLcd::write4bits(RS | DB6);	// Writes H. 
+	I2cLcd::write4bits(RS | DB7);	// shifts to the right
+	ThisThread::sleep_for(4); 
 #endif 
 
 	i2c_ioexpander_write(BT);		// Turn LED on 
-	_delay_ms(5); 
+	ThisThread::sleep_for(5ms); 
 
-	i2c_lcd_write(CLEAR_DISPLAY);
+	I2cLcd::write(CLEAR_DISPLAY);
 
 #if DEBUG 
 	// Print 0 -> 9 test pattern 
 	for (i = '0'; i <= '9'; i++) {
-		i2c_lcd_putchar(i);
+		I2cLcd::putchar(i);
 	}
-	_delay_ms(600); 
+	ThisThread::sleep_for(600ms); 
 
-//	i2c_lcd_write(CLEAR_DISPLAY);
-	i2c_lcd_write(RETURN_HOME);
+//	I2cLcd::write(CLEAR_DISPLAY);
+	I2cLcd::write(RETURN_HOME);
 	for(j=0;j<40;j++) {
-		i2c_lcd_write(0b00010100);
+		I2cLcd::write(0b00010100);
 	}
 	// Print a to z test pattern 
 	for (i = 'a'; i <= 'z'; i++) {
-		i2c_lcd_putchar(i);
+		I2cLcd::putchar(i);
 	}
-	_delay_ms(600); 
+	ThisThread::sleep_for(600ms); 
 #endif 
-
-	return; 
+ 
 }
 
 /* EOF */

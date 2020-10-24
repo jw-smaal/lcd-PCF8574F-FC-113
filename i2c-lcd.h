@@ -59,6 +59,9 @@
 
 class I2cLcd {
 public: 
+	I2cLcd();
+	~I2cLcd(); 
+
 	/**
 	 * Moves the cursor 40 positions to the right 
 	 * so it ends up on line2. 
@@ -80,12 +83,12 @@ public:
 	 * Takes care of sending the 8 bit byte
 	 * in 2 4 bit nibbles.   
 	 */
-	void write4bits(uint8_t val);
+	static void write4bits(uint8_t val);
 
 	/**
 	 * Simply write to the LCD
 	 */
-	void write(uint8_t val);
+	static void write(uint8_t val);
 
 	/**
 	 * Place a character on the LCD
@@ -95,12 +98,12 @@ public:
 	/**
 	 * Toggle enable pin
 	 */
-	void pulse_enable(uint8_t val);
+	static void pulse_enable(uint8_t val);
 
    /**
 	* We init the LCD in 4 bit mode. 
 	*/ 
-	void init();
+	//void init();
 };
 
 
