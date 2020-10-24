@@ -1,6 +1,6 @@
-/**
- * LCD with I2C wing attached at address 0x4E (write) 0x4F (read) 
- *
+/** LCD with I2C wing attached at address 0x4E (write) 0x4F (read) 
+ * no
+ * 
  * Jan-Willem Smaal <usenet@gispen.org> 5 June 2020
  *******************************************************************
  */
