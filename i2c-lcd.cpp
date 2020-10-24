@@ -5,17 +5,7 @@
  *******************************************************************
  */
 #include <inttypes.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-
-#include "util.h" 
-
-
-/** 
- * I2C_master modified from original of Peter Fleury 
- */
-#include "I2C_master.h"
-
+#include "mbed.h"
 
 /**
  * I2C LCD interface using io expander (PCF8574F) wing FC-113. 

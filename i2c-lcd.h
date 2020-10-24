@@ -3,18 +3,13 @@
 /**
  * LCD with I2C wing attached at address 0x4E (write) 0x4F (read) 
  *
- * Jan-Willem Smaal <usenet@gispen.org> 5 June 2020
+ * Jan-Willem Smaal <usenet@gispen.org> 5 June 2020 for ATMEL AVR 
+ * Ported from AVR C to C++ on 24 Oct 2020 for ARM MBED also 
+ * by Jan-Willem Smaal.   
  *******************************************************************
  */
 #include <inttypes.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-
-/** 
- * I2C_master modified from original 
- */
-#include "I2C_master.h"
-
+#include "mbed.h"
 
 /*
  * I2C IO expander wing specifics  
@@ -62,52 +57,51 @@
 
 
 
-/**
- * Moves the cursor 40 positions to the right 
- * so it ends up on line2. 
- */ 
-void i2c_lcd_move_cursor_line2(void); 
+class I2cLcd {
+public: 
+	/**
+	 * Moves the cursor 40 positions to the right 
+	 * so it ends up on line2. 
+	 */ 
+	void move_cursor_line2(void); 
 
-/**
- * Puts the cursor back at line2
- */
-void i2c_lcd_move_cursor_line1(void); 
+	/**
+	 * Puts the cursor back at line2
+	 */
+	void move_cursor_line1(void); 
 
-/**
- * Takes care of sending the I2C start stop to the correct
- * IO expander.  
- */ 
-void i2c_ioexpander_write(uint8_t value);
+	/**
+	 * Takes care of sending the I2C start stop to the correct
+	 * IO expander.  
+	 */ 
+	void ioexpander_write(uint8_t value);
 
+	/**
+	 * Takes care of sending the 8 bit byte
+	 * in 2 4 bit nibbles.   
+	 */
+	void write4bits(uint8_t val);
 
-/**
- * Takes care of sending the 8 bit byte
- * in 2 4 bit nibbles.   
- */
-void i2c_lcd_write4bits(uint8_t val);
+	/**
+	 * Simply write to the LCD
+	 */
+	void write(uint8_t val);
 
-/**
- * Simply write to the LCD
- */
-void i2c_lcd_write(uint8_t val);
+	/**
+	 * Place a character on the LCD
+	 */ 
+	void putchar(char c); 
 
+	/**
+	 * Toggle enable pin
+	 */
+	void pulse_enable(uint8_t val);
 
-/**
- * Place a character on the LCD
- */ 
-void i2c_lcd_putchar(char c); 
-
-
-/**
- * Toggle enable pin
- */
-void i2c_lcd_pulse_enable(uint8_t val);
-
-
-/**
- * We init the LCD in 4 bit mode. 
- */ 
-void i2c_lcd_init();
+   /**
+	* We init the LCD in 4 bit mode. 
+	*/ 
+	void init();
+};
 
 
 #endif	// __I2C_LCD_H 
