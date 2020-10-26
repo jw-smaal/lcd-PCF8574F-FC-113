@@ -10,6 +10,7 @@
  */
 #include <inttypes.h>
 #include "mbed.h"
+#include "Stream.h" 
 
 /*
  * I2C IO expander wing specifics  
@@ -57,7 +58,7 @@
 
 
 
-class I2cLcd {
+class I2cLcd : public Stream {
 public: 
 	I2cLcd();
 	~I2cLcd(); 
@@ -94,6 +95,12 @@ public:
 	 * Place a character on the LCD
 	 */ 
 	void putchar(char c); 
+	
+	/** Implemented Stream functions
+	 *  inhereted  
+	 */ 
+    virtual int _putc(int value);
+    virtual int _getc();
 
 	/**
 	 * Toggle enable pin

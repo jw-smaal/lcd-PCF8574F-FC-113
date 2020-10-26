@@ -6,6 +6,7 @@
  */
 #include <inttypes.h>
 #include "mbed.h"
+#include "i2c-lcd.h"
 
 /**
  * I2C LCD interface using io expander (PCF8574F) wing FC-113. 
@@ -105,6 +106,22 @@ void I2cLcd::putchar(char c)
 }
 
 
+int I2cLcd::_putc(int c) {
+  
+	uint8_t lnibble, hnibble; 
+	hnibble = c & 0xF0;	// High nibble 4 bits
+	lnibble = c & 0x0F; // Low  nibble 4 bits 
+	I2cLcd::write4bits(RS | BT | hnibble);	
+	I2cLcd::write4bits(RS | BT | lnibble<<4);	
+
+    return c;
+}
+ 
+int I2cLcd::_getc() {
+    return -1;
+}
+
+
 /**
  * Toggle enable pin
  */
@@ -132,7 +149,9 @@ void I2cLcd::pulse_enable(uint8_t val)
 
 	// We really need to wait a long time 
 	// to ensure the LCD is ready after powerup. 
-	ThisThread::sleep_for(600ms);
+	//ThisThread::sleep_for(600ms);
+	ThisThread::sleep_for(200ms);
+	
 	i2c_ioexpander_write(~BT);
 	
 #if 0  
